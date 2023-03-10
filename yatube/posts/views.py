@@ -2,14 +2,14 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views.decorators.cache import cache_page
 
-from .models import Group, Post, User
+from .models import Follow, Group, Post, User
 from .forms import CommentForm, PostForm
 from .utils import make_page
 
 
-# Создание поста под авторизацией
 @login_required
 def post_create(request):
+    '''Создание поста под авторизацией.'''
     if request.method == "POST":
         form = PostForm(request.POST, files=request.FILES or None)
         if form.is_valid():
@@ -27,9 +27,9 @@ def post_create(request):
     )
 
 
-# Редактирование поста под авторизацией
 @login_required
 def post_edit(request, post_id):
+    '''Редактирование поста под авторизацией.'''
     post = get_object_or_404(Post, id=post_id)
     if post.author != request.user:
         return redirect('posts:post_detail', post_id)
@@ -48,9 +48,9 @@ def post_edit(request, post_id):
     )
 
 
-# Главная страница
 @cache_page(40, key_prefix='index_page')
 def index(request):
+    '''Главная страница c кешем 40 секунд.'''
     posts = Post.objects.select_related('group', 'author')
     return render(
         request, 'posts/index.html',
@@ -58,8 +58,8 @@ def index(request):
     )
 
 
-# Страница групп
 def group_posts(request, slug):
+    '''Страница групп.'''
     group = get_object_or_404(Group, slug=slug)
     posts = group.posts.select_related('author')
     return render(
@@ -69,24 +69,29 @@ def group_posts(request, slug):
     )
 
 
-# Профайл пользователя
 def profile(request, username):
+    '''Страница профиля пользователя.'''
     author = get_object_or_404(User, username=username)
     posts = Post.objects.select_related('group', 'author').filter(
         author__username=username
     )
+    following = False
+    if request.user.is_authenticated and author != request.user:
+        following = Follow.objects.filter(
+            user=request.user, author=author).exists()
     return render(
         request,
         'posts/profile.html',
         {
             'author': author,
             'page_obj': make_page(request, posts),
+            'following': following
         },
     )
 
 
-#Отдельная запись
 def post_detail(request, post_id):
+    '''Отдельная запись.'''
     post = get_object_or_404(
         Post.objects.select_related('author', 'group'), id=post_id
         )
@@ -102,9 +107,10 @@ def post_detail(request, post_id):
          'comments': comments,
         })
 
-#Добавление комментариев
+
 @login_required
 def add_comment(request, post_id):
+    '''Добавление комментариев под авторизацией'''
     form = CommentForm(request.POST or None)
     if form.is_valid():
         comment = form.save(commit=False)
@@ -112,3 +118,38 @@ def add_comment(request, post_id):
         comment.post = get_object_or_404(Post, id=post_id)
         comment.save()
     return redirect('posts:post_detail', post_id=post_id)
+
+
+@login_required
+def follow_index(request):
+    '''Страница постов на которых подписался пользователь'''
+    posts = Post.objects.filter(author__following__user=request.user)
+    return render(
+        request,
+        'posts/follow.html',
+        {'page_obj': make_page(request, posts),}
+    )
+
+
+@login_required
+def profile_follow(request, username):
+    """Функция подписывания на автора."""
+    author = get_object_or_404(User, username=username)
+    follow = Follow.objects.filter(
+        user=request.user,
+        author=author)
+    if request.user != author and not follow.exists():
+        Follow.objects.create(user=request.user,
+                              author=author)
+    return redirect('posts:profile', username=username)
+
+
+@login_required
+def profile_unfollow(request, username):
+    """Функция отписывания от автора"""
+    author = User.objects.get(username=username)
+    Follow.objects.filter(
+        user=request.user,
+        author=author,
+    ).delete()
+    return redirect('posts:profile', username=username)
