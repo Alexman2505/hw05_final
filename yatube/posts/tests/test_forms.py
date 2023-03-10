@@ -20,7 +20,8 @@ class PostCreateFormTests(TestCase):
         # Создаем пользователя
         cls.user = User.objects.create_user(username='author')
 
-        # Создаем клиент для авторизации пользователя
+        # Создаем клиент для авторизации и
+        # авторизуем автора
         cls.author_client = Client()
         cls.author_client.force_login(cls.user)
 

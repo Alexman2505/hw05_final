@@ -148,8 +148,7 @@ def profile_follow(request, username):
 def profile_unfollow(request, username):
     """Функция отписывания от автора"""
     author = User.objects.get(username=username)
-    Follow.objects.filter(
-        user=request.user,
-        author=author,
-    ).delete()
+    follower = Follow.objects.filter(user=request.user, author=author)
+    if follower.exists():
+        follower.delete()
     return redirect('posts:profile', username=username)
