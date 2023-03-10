@@ -19,6 +19,11 @@ class PostPagesTests(TestCase):
         super().setUpClass()
         # Создаем тестового пользователя-автора
         cls.author = User.objects.create_user(username='Author')
+        # Создаём неавторизованный клиент
+        cls.guest_client = Client()
+        # Создаём клиент для авторизации тестовым пользователем-автором
+        cls.author_client = Client()
+        cls.author_client.force_login(cls.author)
         # Создаем тестовую группу
         cls.group = Group.objects.create(
             title="Тестовая группа",
@@ -81,11 +86,6 @@ class PostPagesTests(TestCase):
             'group': forms.fields.ChoiceField,
             'image': forms.fields.ImageField,
         }
-        # Создаём неавторизованный клиент
-        cls.guest_client = Client()
-        # Создаём клиент для авторизации тестовым пользователем-автором
-        cls.author_client = Client()
-        cls.author_client.force_login(cls.author)
 
     @classmethod
     def tearDownClass(cls):

@@ -13,18 +13,9 @@ class PostURLTests(TestCase):
         super().setUpClass()
         # Создаем тестового пользователя
         cls.user = User.objects.create_user(username='user')
+
         # Создаем тестового пользователя-автора
         cls.author = User.objects.create_user(username='Author')
-        # Создаем тестовую группу
-        cls.group = Group.objects.create(
-            title="Тестовая группа",
-            slug="Test_slag",
-            description="Тестовое описание",
-        )
-        # Создаем тестовый пост
-        cls.post = Post.objects.create(
-            text="Тестовый пост", author=cls.author, group=cls.group
-        )
 
         # Создаём неавторизованный клиент
         cls.guest_client = Client()
@@ -36,6 +27,17 @@ class PostURLTests(TestCase):
         # Создаём клиент для авторизации тестовым пользователем-автором
         cls.author_client = Client()
         cls.author_client.force_login(cls.author)
+
+        # Создаем тестовую группу
+        cls.group = Group.objects.create(
+            title="Тестовая группа",
+            slug="Test_slag",
+            description="Тестовое описание",
+        )
+        # Создаем тестовый пост
+        cls.post = Post.objects.create(
+            text="Тестовый пост", author=cls.author, group=cls.group
+        )
 
         cls.URLS_ALL_STARS = (
             ('/', 'posts/index.html', HTTPStatus.OK),
