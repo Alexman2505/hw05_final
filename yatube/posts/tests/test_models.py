@@ -22,11 +22,9 @@ class PostModelTest(TestCase):
             text='Тестовый пост длина символов больше пятнадцати',
             group=cls.group,
         )
-        #Создаем комментарий
+        # Создаем комментарий
         cls.comment = Comment.objects.create(
-            post=cls.post,
-            author=cls.author,
-            text='это комментарий'
+            post=cls.post, author=cls.author, text='это комментарий'
         )
 
     def test_models_have_correct_object_names(self):
@@ -34,7 +32,7 @@ class PostModelTest(TestCase):
         group_post = {
             str(self.group): 'Тестовая группа',
             str(self.post): self.post.text[: settings.SLICE_LETTERS],
-            str(self.comment): 'это комментарий'
+            str(self.comment): 'это комментарий',
         }
         for field, expected_value in group_post.items():
             with self.subTest(field=field):
@@ -46,7 +44,7 @@ class PostModelTest(TestCase):
         field_verboses = {
             'text': 'Текст поста',
             'group': 'Группа',
-            'image':'Картинка',
+            'image': 'Картинка',
         }
         for field, expected_value in field_verboses.items():
             with self.subTest(field=field):

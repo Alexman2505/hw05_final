@@ -37,12 +37,12 @@ class PostCreateFormTests(TestCase):
 
         # Создаем картинку
         cls.small_gif = (
-             b'\x47\x49\x46\x38\x39\x61\x02\x00'
-             b'\x01\x00\x80\x00\x00\x00\x00\x00'
-             b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
-             b'\x00\x00\x00\x2C\x00\x00\x00\x00'
-             b'\x02\x00\x01\x00\x00\x02\x02\x0C'
-             b'\x0A\x00\x3B'
+            b'\x47\x49\x46\x38\x39\x61\x02\x00'
+            b'\x01\x00\x80\x00\x00\x00\x00\x00'
+            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
+            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
+            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
+            b'\x0A\x00\x3B'
         )
 
         # Создаем пост
@@ -55,7 +55,6 @@ class PostCreateFormTests(TestCase):
         # Считаем количество постов
         cls.post_count = Post.objects.count()
 
-
     @classmethod
     def tearDownClass(cls):
         super().tearDownClass()
@@ -67,16 +66,14 @@ class PostCreateFormTests(TestCase):
         """
         # Контент для файла - это картинка из фикстур
         uploaded = SimpleUploadedFile(
-            name='small.gif',
-            content=self.small_gif,
-            content_type='image/gif'
+            name='small.gif', content=self.small_gif, content_type='image/gif'
         )
 
         # В форму закладывается файл
         form_data = {
             'group': PostCreateFormTests.group.id,
             'text': 'Формы текст',
-            'image': uploaded
+            'image': uploaded,
         }
 
         # Ответ сервера, который получил автор методом запроса post со
@@ -87,16 +84,10 @@ class PostCreateFormTests(TestCase):
         )
         self.assertRedirects(
             response,
-            reverse(
-                'posts:profile', kwargs={'username': self.user}
-            ),
+            reverse('posts:profile', kwargs={'username': self.user}),
         )
-        self.assertEqual(Post.objects.count(), self.post_count+1)
+        self.assertEqual(Post.objects.count(), self.post_count + 1)
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
-        # post = Post.objects.latest('id')
-        # self.assertEqual(post.text,form_data['text'])
-        # self.assertEqual(post.group.id,form_data['group'])
-        # self.assertEqual(post.image.name,f"posts/{form_data['image'].name}")
         self.assertTrue(
             Post.objects.filter(
                 group=form_data['group'],
@@ -108,14 +99,12 @@ class PostCreateFormTests(TestCase):
     def test_create_post_guest_client(self):
         """Проверка создания поста гостем"""
         uploaded = SimpleUploadedFile(
-            name='small.gif',
-            content=self.small_gif,
-            content_type='image/gif'
+            name='small.gif', content=self.small_gif, content_type='image/gif'
         )
         form_data = {
             'group': self.group.id,
             'text': 'Формы текст',
-            'image': uploaded
+            'image': uploaded,
         }
         response = self.guest_client.post(
             reverse('posts:post_create'), data=form_data
@@ -133,49 +122,48 @@ class PostCreateFormTests(TestCase):
 
     def test_add_comment_authorized_client(self):
         """После проверки формы комментарий
-        авторизованного добавляется в пост
+        авторизованного пользователя добавляется в пост
         """
         form_data = {
-            'text': 'Комментарий авторизованного',
+            'text': 'comment_from_user',
         }
         comment_count = Comment.objects.count()
         response = self.author_client.post(
-            reverse(
-                'posts:add_comment',
-                kwargs={'post_id': self.post.id}
-            ),
-            data=form_data, follow=True
+            reverse('posts:add_comment', kwargs={'post_id': self.post.id}),
+            data=form_data,
+            follow=True,
         )
-        self.assertRedirects(response, reverse('posts:post_detail', kwargs={
-                             'post_id': self.post.id}))
+        self.assertRedirects(
+            response,
+            reverse('posts:post_detail', kwargs={'post_id': self.post.id}),
+        )
         self.assertTrue(
-            Comment.objects.filter(
-                text=form_data['text']
-            ).exists())
-        self.assertEqual(Comment.objects.count(), comment_count+1)
+            Comment.objects.filter(text=form_data['text']).exists()
+        )
+        self.assertEqual(Comment.objects.count(), comment_count + 1)
+        self.assertContains(response, form_data['text'])
 
     def test_add_comment_guest_client(self):
-        """После проверки формы комментарий
-        гостя НЕ добавляется в пост
+        """комментировать посты может только
+        авторизованный пользователь;
         """
         form_data = {
             'text': 'Комментарий гостя',
         }
         comment_count = Comment.objects.count()
         response = self.guest_client.post(
-            reverse(
-                'posts:add_comment',
-                kwargs={'post_id': self.post.id}
-            ),
-            data=form_data, follow=True
+            reverse('posts:add_comment', kwargs={'post_id': self.post.id}),
+            data=form_data,
+            follow=True,
         )
-        self.assertRedirects(response, '/auth/login/?next=/posts/'
-                                        f'{self.post.id}/comment/')
+        self.assertRedirects(
+            response, '/auth/login/?next=/posts/' f'{self.post.id}/comment/'
+        )
         self.assertFalse(
-            Comment.objects.filter(
-                text=form_data['text']
-            ).exists())
+            Comment.objects.filter(text=form_data['text']).exists()
+        )
         self.assertEqual(Comment.objects.count(), comment_count)
+        self.assertNotContains(response, form_data['text'])
 
 
 @override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
@@ -232,7 +220,6 @@ class PostEditFormTests(TestCase):
             'image': new_uploaded,
         }
 
-
     @classmethod
     def tearDownClass(cls):
         super().tearDownClass()
@@ -255,7 +242,7 @@ class PostEditFormTests(TestCase):
             (response.status_code, HTTPStatus.OK),
             (self.post.text, self.form_data['text']),
             (self.post.group.id, self.form_data['group']),
-            (self.post.image.name,f"posts/{self.form_data['image'].name}"),
+            (self.post.image.name, f"posts/{self.form_data['image'].name}"),
         )
         for value, expected in data_for_equal:
             with self.subTest(expected=expected):

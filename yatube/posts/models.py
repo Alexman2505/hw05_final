@@ -33,10 +33,8 @@ class Post(models.Model):
         verbose_name="Группа",
     )
     image = models.ImageField(
-        verbose_name="Картинка",
-        upload_to='posts/',
-        blank=True,
-        null=True)
+        verbose_name="Картинка", upload_to='posts/', blank=True, null=True
+    )
 
     class Meta:
         ordering = ['-pub_date']
@@ -57,9 +55,8 @@ class Comment(models.Model):
         related_name='comments',
     )
     text = models.TextField()
-    created = models.DateTimeField(
-        auto_now_add=True
-    )
+    created = models.DateTimeField(auto_now_add=True)
+
     class Meta:
         ordering = ['-created']
 

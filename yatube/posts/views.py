@@ -34,9 +34,8 @@ def post_edit(request, post_id):
     if post.author != request.user:
         return redirect('posts:post_detail', post_id)
     form = PostForm(
-        request.POST or None,
-        files=request.FILES or None,
-        instance=post)
+        request.POST or None, files=request.FILES or None, instance=post
+    )
     if request.method == 'POST':
         if form.is_valid():
             form.save()
@@ -48,13 +47,12 @@ def post_edit(request, post_id):
     )
 
 
-@cache_page(40, key_prefix='index_page')
+@cache_page(20, key_prefix='index_page')
 def index(request):
-    '''Главная страница c кешем 40 секунд.'''
+    '''Главная страница c кешем 20 секунд.'''
     posts = Post.objects.select_related('group', 'author')
     return render(
-        request, 'posts/index.html',
-        {'page_obj': make_page(request, posts)}
+        request, 'posts/index.html', {'page_obj': make_page(request, posts)}
     )
 
 
@@ -78,14 +76,15 @@ def profile(request, username):
     following = False
     if request.user.is_authenticated and author != request.user:
         following = Follow.objects.filter(
-            user=request.user, author=author).exists()
+            user=request.user, author=author
+        ).exists()
     return render(
         request,
         'posts/profile.html',
         {
             'author': author,
             'page_obj': make_page(request, posts),
-            'following': following
+            'following': following,
         },
     )
 
@@ -94,18 +93,20 @@ def post_detail(request, post_id):
     '''Отдельная запись.'''
     post = get_object_or_404(
         Post.objects.select_related('author', 'group'), id=post_id
-        )
+    )
     comments = post.comments.all().select_related('author')
     form = CommentForm()
     author = request.user.id
     return render(
         request,
         'posts/post_detail.html',
-        {'post': post,
-         'author': author,
-         'form': form,
-         'comments': comments,
-        })
+        {
+            'post': post,
+            'author': author,
+            'form': form,
+            'comments': comments,
+        },
+    )
 
 
 @login_required
@@ -122,25 +123,24 @@ def add_comment(request, post_id):
 
 @login_required
 def follow_index(request):
-    '''Страница постов на которых подписался пользователь'''
+    '''Страница постов автора, на которого подписан пользователь'''
     posts = Post.objects.filter(author__following__user=request.user)
     return render(
         request,
         'posts/follow.html',
-        {'page_obj': make_page(request, posts),}
+        {
+            'page_obj': make_page(request, posts),
+        },
     )
 
 
 @login_required
 def profile_follow(request, username):
     """Функция подписывания на автора."""
-    author = get_object_or_404(User, username=username)
-    follow = Follow.objects.filter(
-        user=request.user,
-        author=author)
+    author = User.objects.get(username=username)
+    follow = Follow.objects.filter(user=request.user, author=author)
     if request.user != author and not follow.exists():
-        Follow.objects.create(user=request.user,
-                              author=author)
+        Follow.objects.create(user=request.user, author=author)
     return redirect('posts:profile', username=username)
 
 

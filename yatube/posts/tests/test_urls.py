@@ -39,56 +39,78 @@ class PostURLTests(TestCase):
             text="Тестовый пост", author=cls.author, group=cls.group
         )
 
-        cls.URLS_ALL_STARS = (
-            ('/', 'posts/index.html', HTTPStatus.OK),
-            (
+        cls.URLS_ALL_STARS = {
+            'INDEX': ('/', 'posts/index.html', HTTPStatus.OK),
+            'GROUP': (
                 f'/group/{cls.group.slug}/',
                 'posts/group_list.html',
                 HTTPStatus.OK,
             ),
-            (
+            'PROFILE': (
                 f'/profile/{cls.post.author.username}/',
                 'posts/profile.html',
                 HTTPStatus.OK,
             ),
-            (
+            'POST_DETAIL': (
                 f'/posts/{cls.post.pk}/',
                 'posts/post_detail.html',
                 HTTPStatus.OK,
             ),
-            ('/unexisting_page/', 'core/404.html', HTTPStatus.NOT_FOUND),
-            ('/create/', 'posts/create_post.html', HTTPStatus.OK),
-            (
+            'UNEXISTING': (
+                '/unexisting_page/',
+                'core/404.html',
+                HTTPStatus.NOT_FOUND,
+            ),
+            'POST_CREATE': (
+                '/create/',
+                'posts/create_post.html',
+                HTTPStatus.OK,
+            ),
+            'POST_EDIT': (
                 f'/posts/{cls.post.pk}/edit/',
                 'posts/create_post.html',
                 HTTPStatus.OK,
             ),
-            # (
-            #     f'/posts/{cls.post.pk}/comment',
-            #     'posts/post_detail.html',
-            #     HTTPStatus.OK,
-            # ),
-        )
+            'POST_COMMENT': (
+                f'/posts/{cls.post.pk}/comment/',
+                'posts/post_detail.html',
+                HTTPStatus.OK,
+            ),
+            'FOLLOW_INDEX': (
+                '/follow/',
+                'posts/follow.html',
+                HTTPStatus.OK,
+            ),
+            'FOLLOW': (
+                f'/profile/{cls.post.author.username}/follow/',
+                'posts/profile.html',
+                HTTPStatus.OK,
+            ),
+            'UNFOLLOW': (
+                f'/profile/{cls.post.author.username}/unfollow/',
+                'posts/profile.html',
+                HTTPStatus.OK,
+            ),
+        }
 
     def test_url_for_guest_client(self):
         """Проверяем доступные адреса для клиента."""
-        cache.clear()
-        for url, template, status in self.URLS_ALL_STARS:
+        for url, template, status in self.URLS_ALL_STARS.values():
             with self.subTest(url=url, template=template, status=status):
-                response = self.guest_client.get(url)
+                cache.clear()
+                response = self.guest_client.get(url, follow=True)
                 if (
                     url
-                    == self.URLS_ALL_STARS[settings.POST_CREATE][
-                        settings.POST_URL
-                    ]
+                    == self.URLS_ALL_STARS['POST_CREATE'][settings.POST_URL]
                     or url
-                    == self.URLS_ALL_STARS[settings.POST_EDIT][
-                        settings.POST_URL
-                    ]
-                    # or url
-                    # == self.URLS_ALL_STARS[settings.POST_COMMENT][
-                    #     settings.POST_URL
-                    # ]
+                    == self.URLS_ALL_STARS['POST_EDIT'][settings.POST_URL]
+                    or url
+                    == self.URLS_ALL_STARS['POST_COMMENT'][settings.POST_URL]
+                    or url
+                    == self.URLS_ALL_STARS['FOLLOW_INDEX'][settings.POST_URL]
+                    or url == self.URLS_ALL_STARS['FOLLOW'][settings.POST_URL]
+                    or url
+                    == self.URLS_ALL_STARS['UNFOLLOW'][settings.POST_URL]
                 ):
                     self.assertRedirects(response, '/auth/login/?next=' + url)
                 else:
@@ -98,29 +120,54 @@ class PostURLTests(TestCase):
     def test_url_for_authorized_client(self):
         """Проверяем доступные адреса для авторизованного пользователя."""
         cache.clear()
-        for url, template, status in self.URLS_ALL_STARS:
+        for url, template, status in self.URLS_ALL_STARS.values():
             with self.subTest(url=url, template=template, status=status):
                 response = self.authorized_client.get(url)
                 if (
-                    url
-                    == self.URLS_ALL_STARS[settings.POST_EDIT][
-                        settings.POST_URL
-                    ]
+                    url == self.URLS_ALL_STARS['POST_EDIT'][settings.POST_URL]
+                    or url
+                    == self.URLS_ALL_STARS['POST_COMMENT'][settings.POST_URL]
                 ):
                     self.assertRedirects(
                         response,
-                        self.URLS_ALL_STARS[settings.POST_DETAIL][
-                            settings.POST_URL
-                        ],
+                        self.URLS_ALL_STARS['POST_DETAIL'][settings.POST_URL],
                     )
+                elif (
+                    url == self.URLS_ALL_STARS['FOLLOW'][settings.POST_URL]
+                    or url
+                    == self.URLS_ALL_STARS['UNFOLLOW'][settings.POST_URL]
+                ):
+                    self.assertRedirects(
+                        response,
+                        self.URLS_ALL_STARS['PROFILE'][settings.POST_URL],
+                    )
+
                 else:
                     self.assertTemplateUsed(response, template)
                     self.assertEqual(response.status_code, status)
 
     def test_url_for_author_client(self):
         """Проверяем доступные адреса для автора поста."""
-        for url, template, status in self.URLS_ALL_STARS:
+        for url, template, status in self.URLS_ALL_STARS.values():
             with self.subTest(url=url, template=template, status=status):
                 response = self.author_client.get(url)
-                self.assertTemplateUsed(response, template)
-                self.assertEqual(response.status_code, status)
+                if (
+                    url
+                    == self.URLS_ALL_STARS['POST_COMMENT'][settings.POST_URL]
+                ):
+                    self.assertRedirects(
+                        response,
+                        self.URLS_ALL_STARS['POST_DETAIL'][settings.POST_URL],
+                    )
+                elif (
+                    url == self.URLS_ALL_STARS['FOLLOW'][settings.POST_URL]
+                    or url
+                    == self.URLS_ALL_STARS['UNFOLLOW'][settings.POST_URL]
+                ):
+                    self.assertRedirects(
+                        response,
+                        self.URLS_ALL_STARS['PROFILE'][settings.POST_URL],
+                    )
+                else:
+                    self.assertTemplateUsed(response, template)
+                    self.assertEqual(response.status_code, status)

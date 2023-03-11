@@ -139,10 +139,10 @@ CSRF_FAILURE_VIEW = 'core.views.page_not_found'
 PAGE_NOT_FOUND_VIEW = 'core.views.csrf_failure'
 NUMBER_OF_POSTS: int = 10
 NUMBER_OF_POSTS_PAGE_TWO: int = 3
-POST_CREATE: int = 5
-POST_EDIT: int = 6
-POST_DETAIL: int = 3
-POST_COMMENT: int = 7
+# POST_CREATE: int = 5
+# POST_EDIT: int = 6
+# POST_DETAIL: int = 3
+# POST_COMMENT: int = 7
 POST_URL: int = 0
 SLICE_LETTERS: int = 15
 
