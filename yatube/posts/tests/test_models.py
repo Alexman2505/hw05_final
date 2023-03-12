@@ -38,29 +38,27 @@ class PostModelTest(TestCase):
             with self.subTest(field=field):
                 self.assertEqual(field, expected_value)
 
-    def test_verbose_name(self):
-        """verbose_name в полях совпадает с ожидаемым."""
+    def test_field_labels_and_help_text(self):
+        """
+        Проверяем, что verbose_name и help_text совпадает с ожидаемым
+        """
         post = self.post
-        field_verboses = {
-            'text': 'Текст поста',
-            'group': 'Группа',
-            'image': 'Картинка',
+        field_data = {
+            'text': {
+                'verbose_name': 'Текст поста',
+                'help_text': 'Текст нового поста',
+            },
+            'group': {
+                'verbose_name': 'Группа',
+                'help_text': 'Группа, к которой будет относиться пост',
+            },
+            'image': {'verbose_name': 'Картинка', 'help_text': ''},
         }
-        for field, expected_value in field_verboses.items():
-            with self.subTest(field=field):
-                self.assertEqual(
-                    post._meta.get_field(field).verbose_name, expected_value
-                )
 
-    def test_help_text(self):
-        """help_text в полях совпадает с ожидаемым."""
-        post = self.post
-        field_help_texts = {
-            'text': 'Текст нового поста',
-            'group': 'Группа, к которой будет относиться пост',
-        }
-        for field, expected_value in field_help_texts.items():
-            with self.subTest(field=field):
+        for field_name, expected_data in field_data.items():
+            with self.subTest(field_name=field_name):
+                field = post._meta.get_field(field_name)
                 self.assertEqual(
-                    post._meta.get_field(field).help_text, expected_value
+                    field.verbose_name, expected_data['verbose_name']
                 )
+                self.assertEqual(field.help_text, expected_data['help_text'])
