@@ -68,6 +68,11 @@ class PostPagesTests(TestCase):
         cls.comment = Comment.objects.create(
             post=cls.post, author=cls.author, text='это комментарий'
         )
+        cls.post_index = reverse('posts:index')
+        cls.post_detail = reverse(
+            'posts:post_detail',
+            kwargs={'post_id': PostPagesTests.post.pk},
+        )
         cls.templates_guest = (
             (
                 reverse('posts:index'),
@@ -91,10 +96,7 @@ class PostPagesTests(TestCase):
                 Post.objects.filter(author=PostPagesTests.post.author),
             ),
             (
-                reverse(
-                    'posts:post_detail',
-                    kwargs={'post_id': PostPagesTests.post.pk},
-                ),
+                cls.post_detail,
                 'posts/post_detail.html',
                 Post.objects.filter(pk=PostPagesTests.post.pk),
             ),
@@ -161,20 +163,18 @@ class PostPagesTests(TestCase):
 
     def test_comments_in_post_detail(self):
         """Проверка доступности комментария"""
-        response = self.guest_client.get(
-            reverse('posts:post_detail', kwargs={'post_id': self.post.id})
-        )
+        response = self.guest_client.get(self.post_detail)
         self.assertIn('comments', response.context)
 
     def test_cache_index(self):
         '''Проверка кеша главной страницы'''
         cache.clear()
-        response_1 = self.guest_client.get(reverse('posts:index'))
+        response_1 = self.guest_client.get(self.post_index)
         Post.objects.all().delete()
-        response_2 = self.guest_client.get(reverse('posts:index'))
+        response_2 = self.guest_client.get(self.post_index)
         self.assertEqual(response_1.content, response_2.content)
         cache.clear()
-        response_3 = self.guest_client.get(reverse('posts:index'))
+        response_3 = self.guest_client.get(self.post_index)
         self.assertNotEqual(response_1.content, response_3.content)
 
 
@@ -257,16 +257,14 @@ class FollowTests(TestCase):
         cls.post = Post.objects.create(
             author=cls.author, text='Текст для проверки ленты'
         )
+        cls.follow_url = reverse(
+            'posts:profile_follow', kwargs={'username': cls.author.username}
+        )
 
     def test_can_following_and_unfollowing(self):
         """Фолловер может подписаться или отписаться"""
         follow_count = Follow.objects.count()
-        self.follower_client.get(
-            reverse(
-                'posts:profile_follow',
-                kwargs={'username': self.author.username},
-            )
-        )
+        self.follower_client.get(self.follow_url)
         self.assertEqual(Follow.objects.count(), follow_count + 1)
         follow_count = Follow.objects.count()
         self.follower_client.get(
@@ -279,26 +277,12 @@ class FollowTests(TestCase):
 
     def test_follow_page_for_follower(self):
         """Пост появляется на странице того, кто подписан"""
-        self.follower_client.get(
-            reverse(
-                'posts:profile_follow',
-                kwargs={
-                    'username': self.author.username,
-                },
-            )
-        )
+        self.follower_client.get(self.follow_url)
         response = self.follower_client.get(reverse('posts:follow_index'))
         self.assertEqual(response.context['page_obj'][0], self.post)
 
     def test_follow_page_for_user(self):
         """Пост не появляется на странице того, кто не подписан"""
-        self.follower_client.get(
-            reverse(
-                'posts:profile_follow',
-                kwargs={
-                    'username': self.author.username,
-                },
-            )
-        )
+        self.follower_client.get(self.follow_url)
         response = self.user_client.get(reverse('posts:follow_index'))
         self.assertEqual(len(response.context['page_obj']), 0)
