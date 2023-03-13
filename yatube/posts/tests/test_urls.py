@@ -92,82 +92,151 @@ class PostURLTests(TestCase):
                 HTTPStatus.OK,
             ),
         }
+        # Доступные адресы для гостя
+        cls.URLS_GUEST_ALLOWED = {
+            'INDEX': cls.URLS_ALL_STARS['INDEX'],
+            'GROUP': cls.URLS_ALL_STARS['GROUP'],
+            'PROFILE': cls.URLS_ALL_STARS['PROFILE'],
+            'POST_DETAIL': cls.URLS_ALL_STARS['POST_DETAIL'],
+            'UNEXISTING': cls.URLS_ALL_STARS['UNEXISTING'],
+        }
+        # Адресы, которые редиректят гостя на авторизацию
+        cls.URLS_GUEST_REDIRECT_LOGIN = {
+            'POST_CREATE': cls.URLS_ALL_STARS['POST_CREATE'],
+            'POST_EDIT': cls.URLS_ALL_STARS['POST_EDIT'],
+            'POST_COMMENT': cls.URLS_ALL_STARS['POST_COMMENT'],
+            'FOLLOW_INDEX': cls.URLS_ALL_STARS['FOLLOW_INDEX'],
+            'FOLLOW': cls.URLS_ALL_STARS['FOLLOW'],
+            'UNFOLLOW': cls.URLS_ALL_STARS['UNFOLLOW'],
+        }
 
-    def test_url_for_guest_client(self):
-        """Проверяем доступные адреса для клиента."""
-        for url, template, status in self.URLS_ALL_STARS.values():
+        # Доступные адреса для авторизованного пользователя
+        cls.URLS_AUTHORIZED_ALLOWED = {
+            'INDEX': cls.URLS_ALL_STARS['INDEX'],
+            'GROUP': cls.URLS_ALL_STARS['GROUP'],
+            'PROFILE': cls.URLS_ALL_STARS['PROFILE'],
+            'POST_DETAIL': cls.URLS_ALL_STARS['POST_DETAIL'],
+            'UNEXISTING': cls.URLS_ALL_STARS['UNEXISTING'],
+            'POST_CREATE': cls.URLS_ALL_STARS['POST_CREATE'],
+            'FOLLOW_INDEX': cls.URLS_ALL_STARS['FOLLOW_INDEX'],
+        }
+
+        # Адресы, которые редиректят авторизованного
+        # на страницу деталей поста
+        cls.URLS_AUTHORIZED_REDIRECT_POST_DETAIL = {
+            'POST_EDIT': cls.URLS_ALL_STARS['POST_EDIT'],
+            'POST_COMMENT': cls.URLS_ALL_STARS['POST_COMMENT'],
+        }
+
+        # Адресы, которые редиректят авторизованного
+        # на страницу профиля пользователя
+        cls.URLS_AUTHORIZED_REDIRECT_PROFILE = {
+            'FOLLOW': cls.URLS_ALL_STARS['FOLLOW'],
+            'UNFOLLOW': cls.URLS_ALL_STARS['UNFOLLOW'],
+        }
+
+        # Доступные адреса для автора
+        cls.URLS_AUTHOR_ALLOWED = {
+            'INDEX': cls.URLS_ALL_STARS['INDEX'],
+            'GROUP': cls.URLS_ALL_STARS['GROUP'],
+            'PROFILE': cls.URLS_ALL_STARS['PROFILE'],
+            'POST_DETAIL': cls.URLS_ALL_STARS['POST_DETAIL'],
+            'UNEXISTING': cls.URLS_ALL_STARS['UNEXISTING'],
+            'POST_CREATE': cls.URLS_ALL_STARS['POST_CREATE'],
+            'FOLLOW_INDEX': cls.URLS_ALL_STARS['FOLLOW_INDEX'],
+            'POST_EDIT': cls.URLS_ALL_STARS['POST_EDIT'],
+        }
+
+        # Адресы, которые редиректят автора
+        # на страницу деталей поста
+        cls.URLS_AUTHOR_REDIRECT_POST_DETAIL = {
+            'POST_COMMENT': cls.URLS_ALL_STARS['POST_COMMENT'],
+        }
+
+        # Адресы, которые редиректят автора
+        # на страницу профиля пользователя
+        cls.URLS_AUTHOR_REDIRECT_PROFILE = {
+            'FOLLOW': cls.URLS_ALL_STARS['FOLLOW'],
+            'UNFOLLOW': cls.URLS_ALL_STARS['UNFOLLOW'],
+        }
+
+    def test_available_urls_for_guest_client(self):
+        """Проверяем доступные адреса для гостевого пользователя."""
+        for url, template, status in self.URLS_GUEST_ALLOWED.values():
             with self.subTest(url=url, template=template, status=status):
                 cache.clear()
                 response = self.guest_client.get(url, follow=True)
-                if (
-                    url
-                    == self.URLS_ALL_STARS['POST_CREATE'][settings.POST_URL]
-                    or url
-                    == self.URLS_ALL_STARS['POST_EDIT'][settings.POST_URL]
-                    or url
-                    == self.URLS_ALL_STARS['POST_COMMENT'][settings.POST_URL]
-                    or url
-                    == self.URLS_ALL_STARS['FOLLOW_INDEX'][settings.POST_URL]
-                    or url == self.URLS_ALL_STARS['FOLLOW'][settings.POST_URL]
-                    or url
-                    == self.URLS_ALL_STARS['UNFOLLOW'][settings.POST_URL]
-                ):
-                    self.assertRedirects(response, '/auth/login/?next=' + url)
-                else:
-                    self.assertTemplateUsed(response, template)
-                    self.assertEqual(response.status_code, status)
+                self.assertTemplateUsed(response, template)
+                self.assertEqual(response.status_code, status)
 
-    def test_url_for_authorized_client(self):
+    def test_redirects_for_guest_client_to_login(self):
+        """Проверяем редиректы для гостевого пользователя на авторизацию."""
+        for url, _, _ in self.URLS_GUEST_REDIRECT_LOGIN.values():
+            with self.subTest(url=url):
+                cache.clear()
+                response = self.guest_client.get(url, follow=True)
+                self.assertRedirects(response, '/auth/login/?next=' + url)
+
+    def test_available_urls_for_authorized_client(self):
         """Проверяем доступные адреса для авторизованного пользователя."""
-        cache.clear()
-        for url, template, status in self.URLS_ALL_STARS.values():
+        for url, template, status in self.URLS_AUTHORIZED_ALLOWED.values():
             with self.subTest(url=url, template=template, status=status):
-                response = self.authorized_client.get(url)
-                if (
-                    url == self.URLS_ALL_STARS['POST_EDIT'][settings.POST_URL]
-                    or url
-                    == self.URLS_ALL_STARS['POST_COMMENT'][settings.POST_URL]
-                ):
-                    self.assertRedirects(
-                        response,
-                        self.URLS_ALL_STARS['POST_DETAIL'][settings.POST_URL],
-                    )
-                elif (
-                    url == self.URLS_ALL_STARS['FOLLOW'][settings.POST_URL]
-                    or url
-                    == self.URLS_ALL_STARS['UNFOLLOW'][settings.POST_URL]
-                ):
-                    self.assertRedirects(
-                        response,
-                        self.URLS_ALL_STARS['PROFILE'][settings.POST_URL],
-                    )
+                cache.clear()
+                response = self.authorized_client.get(url, follow=True)
+                self.assertTemplateUsed(response, template)
+                self.assertEqual(response.status_code, status)
 
-                else:
-                    self.assertTemplateUsed(response, template)
-                    self.assertEqual(response.status_code, status)
+    def test_redirects_for_authorized_client_to_post_detail(self):
+        """Проверяем редиректы для авторизованного пользователя
+        на страницу поста.
+        """
+        for url, _, _ in self.URLS_AUTHORIZED_REDIRECT_POST_DETAIL.values():
+            with self.subTest(url=url):
+                cache.clear()
+                response = self.authorized_client.get(url, follow=True)
+                self.assertRedirects(
+                    response,
+                    self.URLS_ALL_STARS['POST_DETAIL'][settings.POST_URL],
+                )
 
-    def test_url_for_author_client(self):
-        """Проверяем доступные адреса для автора поста."""
-        for url, template, status in self.URLS_ALL_STARS.values():
+    def test_redirects_for_authorized_client_to_post_profile(self):
+        """Проверяем редиректы для авторизованного пользователя
+        на страницу профиля.
+        """
+        for url, _, _ in self.URLS_AUTHORIZED_REDIRECT_PROFILE.values():
+            with self.subTest(url=url):
+                cache.clear()
+                response = self.authorized_client.get(url, follow=True)
+                self.assertRedirects(
+                    response, self.URLS_ALL_STARS['PROFILE'][settings.POST_URL]
+                )
+
+    def test_available_urls_for_author_client(self):
+        """Проверяем доступные адреса для автора."""
+        for url, template, status in self.URLS_AUTHOR_ALLOWED.values():
             with self.subTest(url=url, template=template, status=status):
-                response = self.author_client.get(url)
-                if (
-                    url
-                    == self.URLS_ALL_STARS['POST_COMMENT'][settings.POST_URL]
-                ):
-                    self.assertRedirects(
-                        response,
-                        self.URLS_ALL_STARS['POST_DETAIL'][settings.POST_URL],
-                    )
-                elif (
-                    url == self.URLS_ALL_STARS['FOLLOW'][settings.POST_URL]
-                    or url
-                    == self.URLS_ALL_STARS['UNFOLLOW'][settings.POST_URL]
-                ):
-                    self.assertRedirects(
-                        response,
-                        self.URLS_ALL_STARS['PROFILE'][settings.POST_URL],
-                    )
-                else:
-                    self.assertTemplateUsed(response, template)
-                    self.assertEqual(response.status_code, status)
+                cache.clear()
+                response = self.author_client.get(url, follow=True)
+                self.assertTemplateUsed(response, template)
+                self.assertEqual(response.status_code, status)
+
+    def test_redirects_for_authorized_client_to_post_detail(self):
+        """Проверяем редиректы для автора на страницу поста."""
+        for url, _, _ in self.URLS_AUTHOR_REDIRECT_POST_DETAIL.values():
+            with self.subTest(url=url):
+                cache.clear()
+                response = self.author_client.get(url, follow=True)
+                self.assertRedirects(
+                    response,
+                    self.URLS_ALL_STARS['POST_DETAIL'][settings.POST_URL],
+                )
+
+    def test_redirects_for_authorized_client_to_post_profile(self):
+        """Проверяем редиректы для автора на страницу профиля."""
+        for url, _, _ in self.URLS_AUTHOR_REDIRECT_PROFILE.values():
+            with self.subTest(url=url):
+                cache.clear()
+                response = self.author_client.get(url, follow=True)
+                self.assertRedirects(
+                    response, self.URLS_ALL_STARS['PROFILE'][settings.POST_URL]
+                )
