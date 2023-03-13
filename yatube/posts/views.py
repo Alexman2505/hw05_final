@@ -46,7 +46,6 @@ def post_edit(request, post_id):
     )
 
 
-# @cache_page(20, key_prefix='index_page')
 def index(request):
     '''Главная страница c кешем 20 секунд.'''
     posts = Post.objects.select_related('group', 'author')
@@ -72,12 +71,11 @@ def profile(request, username):
     posts = Post.objects.select_related('group', 'author').filter(
         author__username=username
     )
-
-    following = False
-    if request.user.is_authenticated and author != request.user:
-        following = Follow.objects.filter(
-            user=request.user, author=author
-        ).exists()
+    following = (
+        request.user.is_authenticated
+        and author != request.user
+        and Follow.objects.filter(user=request.user, author=author).exists()
+    )
     return render(
         request,
         'posts/profile.html',
@@ -138,12 +136,7 @@ def follow_index(request):
 def profile_follow(request, username):
     """Функция подписывания на автора."""
     author = User.objects.get(username=username)
-    if (
-        request.user != author
-        and not Follow.objects.filter(
-            user=request.user, author=author
-        ).exists()
-    ):
+    if request.user != author:
         Follow.objects.get_or_create(user=request.user, author=author)
     return redirect('posts:profile', username=username)
 
