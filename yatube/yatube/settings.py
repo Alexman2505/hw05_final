@@ -23,10 +23,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '(9)ma_9eofnb!=x#c1zhc&5qyca%nrk_ceapz(k24_=z9w!xr2'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = False
+
 DEBUG = True
 
 ALLOWED_HOSTS = [
+    'www.alexman2505.pythonanywhere.com',
+    'alexman2505.pythonanywhere.com',
     'localhost',
     '127.0.0.1',
     '[::1]',
@@ -48,6 +50,7 @@ INSTALLED_APPS = [
     'core.apps.CoreConfig',
     'about.apps.AboutConfig',
     'sorl.thumbnail',
+    'debug_toolbar',
 ]
 
 MIDDLEWARE = [
@@ -58,6 +61,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 ROOT_URLCONF = 'yatube.urls'
@@ -139,10 +143,6 @@ CSRF_FAILURE_VIEW = 'core.views.page_not_found'
 PAGE_NOT_FOUND_VIEW = 'core.views.csrf_failure'
 NUMBER_OF_POSTS: int = 10
 NUMBER_OF_POSTS_PAGE_TWO: int = 3
-# POST_CREATE: int = 5
-# POST_EDIT: int = 6
-# POST_DETAIL: int = 3
-# POST_COMMENT: int = 7
 POST_URL: int = 0
 SLICE_LETTERS: int = 15
 
@@ -151,3 +151,7 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
     }
 }
+
+INTERNAL_IPS = [
+    '127.0.0.1',
+]
