@@ -92,6 +92,7 @@ class PostURLTests(TestCase):
                 HTTPStatus.OK,
             ),
         }
+
         # Доступные адресы для гостя
         cls.URLS_GUEST_ALLOWED = {
             'INDEX': cls.URLS_ALL_STARS['INDEX'],
@@ -100,50 +101,17 @@ class PostURLTests(TestCase):
             'POST_DETAIL': cls.URLS_ALL_STARS['POST_DETAIL'],
             'UNEXISTING': cls.URLS_ALL_STARS['UNEXISTING'],
         }
-        # Адресы, которые редиректят гостя на авторизацию
-        cls.URLS_GUEST_REDIRECT_LOGIN = {
-            'POST_CREATE': cls.URLS_ALL_STARS['POST_CREATE'],
-            'POST_EDIT': cls.URLS_ALL_STARS['POST_EDIT'],
-            'POST_COMMENT': cls.URLS_ALL_STARS['POST_COMMENT'],
-            'FOLLOW_INDEX': cls.URLS_ALL_STARS['FOLLOW_INDEX'],
-            'FOLLOW': cls.URLS_ALL_STARS['FOLLOW'],
-            'UNFOLLOW': cls.URLS_ALL_STARS['UNFOLLOW'],
-        }
 
-        # Доступные адреса для авторизованного пользователя
+        # Доступные адресы для авторизованного пользователя
         cls.URLS_AUTHORIZED_ALLOWED = {
-            'INDEX': cls.URLS_ALL_STARS['INDEX'],
-            'GROUP': cls.URLS_ALL_STARS['GROUP'],
-            'PROFILE': cls.URLS_ALL_STARS['PROFILE'],
-            'POST_DETAIL': cls.URLS_ALL_STARS['POST_DETAIL'],
-            'UNEXISTING': cls.URLS_ALL_STARS['UNEXISTING'],
+            **cls.URLS_GUEST_ALLOWED,
             'POST_CREATE': cls.URLS_ALL_STARS['POST_CREATE'],
             'FOLLOW_INDEX': cls.URLS_ALL_STARS['FOLLOW_INDEX'],
         }
 
-        # Адресы, которые редиректят авторизованного
-        # на страницу деталей поста
-        cls.URLS_AUTHORIZED_REDIRECT_POST_DETAIL = {
-            'POST_EDIT': cls.URLS_ALL_STARS['POST_EDIT'],
-            'POST_COMMENT': cls.URLS_ALL_STARS['POST_COMMENT'],
-        }
-
-        # Адресы, которые редиректят авторизованного
-        # на страницу профиля пользователя
-        cls.URLS_AUTHORIZED_REDIRECT_PROFILE = {
-            'FOLLOW': cls.URLS_ALL_STARS['FOLLOW'],
-            'UNFOLLOW': cls.URLS_ALL_STARS['UNFOLLOW'],
-        }
-
-        # Доступные адреса для автора
+        # Доступные адресы для автора
         cls.URLS_AUTHOR_ALLOWED = {
-            'INDEX': cls.URLS_ALL_STARS['INDEX'],
-            'GROUP': cls.URLS_ALL_STARS['GROUP'],
-            'PROFILE': cls.URLS_ALL_STARS['PROFILE'],
-            'POST_DETAIL': cls.URLS_ALL_STARS['POST_DETAIL'],
-            'UNEXISTING': cls.URLS_ALL_STARS['UNEXISTING'],
-            'POST_CREATE': cls.URLS_ALL_STARS['POST_CREATE'],
-            'FOLLOW_INDEX': cls.URLS_ALL_STARS['FOLLOW_INDEX'],
+            **cls.URLS_AUTHORIZED_ALLOWED,
             'POST_EDIT': cls.URLS_ALL_STARS['POST_EDIT'],
         }
 
@@ -153,11 +121,26 @@ class PostURLTests(TestCase):
             'POST_COMMENT': cls.URLS_ALL_STARS['POST_COMMENT'],
         }
 
-        # Адресы, которые редиректят автора
+        # Адресы, которые редиректят авторизованного
+        # на страницу деталей поста
+        cls.URLS_AUTHORIZED_REDIRECT_POST_DETAIL = {
+            **cls.URLS_AUTHOR_REDIRECT_POST_DETAIL,
+            'POST_EDIT': cls.URLS_ALL_STARS['POST_EDIT'],
+        }
+
+        # Адресы, которые редиректят авторизованного
         # на страницу профиля пользователя
-        cls.URLS_AUTHOR_REDIRECT_PROFILE = {
+        cls.URLS_AUTHORIZED_REDIRECT_PROFILE = {
             'FOLLOW': cls.URLS_ALL_STARS['FOLLOW'],
             'UNFOLLOW': cls.URLS_ALL_STARS['UNFOLLOW'],
+        }
+
+        # Адресы, которые редиректят гостя на авторизацию
+        cls.URLS_GUEST_REDIRECT_LOGIN = {
+            **cls.URLS_AUTHORIZED_REDIRECT_POST_DETAIL,
+            **cls.URLS_AUTHORIZED_REDIRECT_PROFILE,
+            'POST_CREATE': cls.URLS_ALL_STARS['POST_CREATE'],
+            'FOLLOW_INDEX': cls.URLS_ALL_STARS['FOLLOW_INDEX'],
         }
 
     def test_available_urls_for_guest_client(self):
@@ -233,7 +216,7 @@ class PostURLTests(TestCase):
 
     def test_redirects_for_authorized_client_to_post_profile(self):
         """Проверяем редиректы для автора на страницу профиля."""
-        for url, _, _ in self.URLS_AUTHOR_REDIRECT_PROFILE.values():
+        for url, _, _ in self.URLS_AUTHORIZED_REDIRECT_PROFILE.values():
             with self.subTest(url=url):
                 cache.clear()
                 response = self.author_client.get(url, follow=True)
