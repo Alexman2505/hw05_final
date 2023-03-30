@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
-  {% block title %}Страница подписок{%endblock%}
+{% block title %}Страница подписок{% endblock %}
 {% block content %}
   <h1>Страница подписок</h1>
   {% include 'includes/switcher.html' %}
-    {% for post in page_obj %}
-      {% include 'includes/general.html' %}
-    {% endfor %}
+  {% for post in page_obj %}
+    {% include 'includes/general.html' %}
+  {% endfor %}
   {% include 'includes/paginator.html' %}
 {% endblock %}

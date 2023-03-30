@@ -1,29 +1,25 @@
 {% extends 'base.html' %}
-    {% block title %}{{ author.get_full_name }} профайл пользователя{%endblock%}
+{% block title %}{{ author.get_full_name }} профайл пользователя{% endblock %}
 {% block content %}
-<div class="mb-5">
+  <div class="mb-5">
     <h1>Все посты пользователя {{ author.get_full_name }}</h1>
     <h3>Всего постов: {{ author.posts.count }}</h3>
     {% if request.user.is_authenticated and author != request.user %}
-        {% if following %}
-        <a
-            class="btn btn-lg btn-primary"
-            href="{% url 'posts:profile_unfollow' author.username %}" role="button"
-        >
-            Отписаться
+      {% if following %}
+        <a class="btn btn-lg btn-primary"
+           href="{% url 'posts:profile_unfollow' author.username %}"
+           role="button">
+          Отписаться
         </a>
-        {% else %}
-            <a
-                class="btn btn-lg btn-primary"
-                href="{% url 'posts:profile_follow' author.username %}" role="button"
-            >
-                Подписаться
-            </a>
-        {% endif %}
+      {% else %}
+        <a class="btn btn-lg btn-primary"
+           href="{% url 'posts:profile_follow' author.username %}"
+           role="button">Подписаться</a>
+      {% endif %}
     {% endif %}
   </div>
-        {% for post in page_obj %}
-            {% include 'includes/general.html' with hide_author_links=True %}
-        {% endfor %}
-    {% include 'includes/paginator.html' %}
+  {% for post in page_obj %}
+    {% include 'includes/general.html' with hide_author_links=True %}
+  {% endfor %}
+  {% include 'includes/paginator.html' %}
 {% endblock %}
